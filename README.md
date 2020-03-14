@@ -11,7 +11,7 @@ Custom integration for Hue &amp; Lutron Aurora [Friends of Hue](https://www2.mee
 
 ## Installation
 
-Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). You need to set up your [Hue bridge](https://www.home-assistant.io/integrations/hue) first. Alternatively install via [HACS](https://hacs.xyz/). TODO
+Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). You need to set up your [Hue bridge](https://www.home-assistant.io/integrations/hue) first. TODO Alternatively install via [HACS](https://hacs.xyz/).
 
 ## Configuration
 
@@ -22,9 +22,7 @@ remote:
   - platform: hueremote
 ```
 
-Hue dimmer remotes can be used for a click and long press (hold button for 2 sec and see LED blink twice).
-
 ## Supported remotes
-* [Hue dimmer switch](https://www2.meethue.com/en-us/p/hue-dimmer-switch/046677473372)
-* [hue tap switch](https://www2.meethue.com/en-us/p/hue-tap-switch/046677473365)
+* [Hue dimmer switch](https://www2.meethue.com/en-us/p/hue-dimmer-switch/046677473372) - can be used for a click and long press (hold button for 2 sec and see LED blink twice).
+* [Hue tap switch](https://www2.meethue.com/en-us/p/hue-tap-switch/046677473365)
 * [Lutron Aurora smart bulb dimmer](http://www.lutron.com/en-US/products/pages/standalonecontrols/dimmers-switches/smartbulbdimmer/overview.aspx)
