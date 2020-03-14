@@ -8,6 +8,13 @@
 # Hue-remotes-HASS
 Custom integration for Hue &amp; Lutron Aurora [Friends of Hue](https://www2.meethue.com/en-us/works-with) (FOH) remotes with Home Assistant.
 
+## Overview
+
+This custom integration provides the missing support for `remote` devices in the [official Hue integration of HA Core](https://www.home-assistant.io/integrations/hue), by registering the platform in the main integration and sharing the sensor data with it.
+
+As this new platform imposes a lower `scan_interval` for all hue sensors (of 1Hz), sensors from the main hue integration will also increase their refresh rate to 1 Hz.
+
+Be advised that the increased update of this custom integration may cause connectivity problems which can result in errors in the official hue integration, please do not create any issue for this. If you can't live with these errors, do not use this custom integration.
 
 ## Installation
 
@@ -25,4 +32,6 @@ remote:
 ## Supported remotes
 * [Hue dimmer switch](https://www2.meethue.com/en-us/p/hue-dimmer-switch/046677473372) - can be used for a click and long press (hold button for 2 sec and see LED blink twice).
 * [Hue tap switch](https://www2.meethue.com/en-us/p/hue-tap-switch/046677473365)
+* [Hue smart button](https://www2.meethue.com/en-us/p/hue-smart-button/046677553715)
 * [Lutron Aurora smart bulb dimmer](http://www.lutron.com/en-US/products/pages/standalonecontrols/dimmers-switches/smartbulbdimmer/overview.aspx)
+* [Lutron Aurora rotary dimmer](http://www.lutron.com/en-US/Products/Pages/StandAloneControls/Dimmers-Switches/RotaryDimmer/Overview.aspx)
