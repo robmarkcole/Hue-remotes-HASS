@@ -1,71 +1,109 @@
 """Hue remotes."""
+from datetime import timedelta
 import logging
 
+from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.components.remote import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    RemoteDevice,
-)
+from homeassistant.components.remote import PLATFORM_SCHEMA  # noqa: F401
 
-from . import DOMAIN
-from .data_manager import (
-    DEFAULT_SCAN_INTERVAL,
-    HueSensorBaseDevice,
-    HueSensorData,
+from homeassistant.helpers.event import async_track_time_interval
+
+from .hue_api_response import (
+    HueRemoteZGPSwitch,
+    HueRemoteZLLRelativeRotary,
+    HueRemoteZLLSwitch,
 )
-from .hue_api_response import REMOTE_MODELS
+from homeassistant.components.hue import DOMAIN as HUE_DOMAIN
+from homeassistant.components.hue.sensor_base import SENSOR_CONFIG_MAP
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
-REMOTE_ICONS = {
-    "RWL": "mdi:remote",
-    "ROM": "mdi:remote",
-    "ZGP": "mdi:remote",
-    "FOH": "mdi:light-switch",
-    "Z3-": "mdi:light-switch",
-}
+# TODO add ZLLRelativeRotary definitions to aiohue
+TYPE_ZLL_ROTARY = "ZLLRelativeRotary"
+
+# Filter by aiohue.sensor data using "type" attribute
+_IMPLEMENTED_REMOTE_TYPES = (TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH, TYPE_ZLL_ROTARY)
+
+REMOTE_NAME_FORMAT = "{}"  # just the given one in Hue app
+
+# Scan interval for remotes and binary sensors is set to < 1s
+# just to ~ensure that an update is called for each HA tick,
+# as using an exact 1s misses some of the ticks
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=0.5)
 
 
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ):
     """Initialise Hue Bridge connection."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HueSensorData(hass)
+    for bridge_entry_id, bridge in hass.data[HUE_DOMAIN].items():
 
-    await hass.data[DOMAIN].async_add_platform_entities(
-        HueRemote,
-        REMOTE_MODELS,
-        async_add_entities,
-        config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-    )
+        @callback
+        def _add_remotes():
+            """Check for new devices to be added to HA."""
+            new_remotes = []
+            api = bridge.api.sensors
+            for item_id in api:
+                sensor = api[item_id]
+                if sensor.type not in _IMPLEMENTED_REMOTE_TYPES:
+                    continue
+
+                existing = bridge.sensor_manager.current.get(sensor.uniqueid)
+                if existing is not None:
+                    continue
+
+                sensor_config = SENSOR_CONFIG_MAP.get(sensor.type)
+                base_name = sensor.name
+                name = sensor_config["name_format"].format(base_name)
+
+                new_remote = sensor_config["class"](sensor, name, bridge)
+                bridge.sensor_manager.current[sensor.uniqueid] = new_remote
+                new_remotes.append(new_remote)
+
+                _LOGGER.debug(
+                    "Setup remote %s: %s", sensor.type, sensor.uniqueid,
+                )
+            if new_remotes:
+                async_add_entities(new_remotes)
+
+        # Add listener to add discovered remotes
+        bridge.sensor_manager.coordinator.async_add_listener(_add_remotes)
+        _add_remotes()
+
+        # Set up updates at scan_interval
+        async def _update_remotes(now=None):
+            """Request a bridge data refresh to update states on remotes."""
+            await bridge.sensor_manager.coordinator.async_refresh()
+            _LOGGER.debug("Update requested at %s", now)
+
+        remote_sc = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        if remote_sc < bridge.sensor_manager.coordinator.update_interval:
+            # Add listener to update remotes at high rate
+            # TODO change sm.coordinator.update_interval instead.
+            #  It can be done right here, but any bridge.reset event
+            #  would re-write it, so we maintain our own scheduler meanwhile
+            async_track_time_interval(
+                hass, _update_remotes, remote_sc,
+            )
 
 
-class HueRemote(HueSensorBaseDevice, RemoteDevice):
-    """Class to hold Hue Remote basic info."""
-
-    @property
-    def state(self):
-        """Return the state of the remote."""
-        return self.sensor_data["state"]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        data = self.sensor_data
-        if data:
-            icon = REMOTE_ICONS.get(data["model"])
-            if icon:
-                return icon
-        return "mdi:remote"  # pragma: no cover
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return True
-
-    def turn_on(self, **kwargs):
-        """Do nothing."""
-
-    def turn_off(self, **kwargs):
-        """Do nothing."""
+SENSOR_CONFIG_MAP.update(
+    {
+        TYPE_ZLL_SWITCH: {
+            "platform": "remote",
+            "name_format": REMOTE_NAME_FORMAT,
+            "class": HueRemoteZLLSwitch,
+        },
+        TYPE_ZGP_SWITCH: {
+            "platform": "remote",
+            "name_format": REMOTE_NAME_FORMAT,
+            "class": HueRemoteZGPSwitch,
+        },
+        TYPE_ZLL_ROTARY: {
+            "platform": "remote",
+            "name_format": REMOTE_NAME_FORMAT,
+            "class": HueRemoteZLLRelativeRotary,
+        },
+    }
+)
