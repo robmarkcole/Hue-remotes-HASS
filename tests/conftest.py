@@ -15,7 +15,7 @@ from custom_components.hueremote.data_manager import (
     HueSensorBaseDevice,
     HueSensorData,
 )
-from .sensor_samples import (
+from .api_samples import (
     MOCK_ZGP,
     MOCK_RWL,
     MOCK_Z3_ROTARY,
