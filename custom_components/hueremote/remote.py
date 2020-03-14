@@ -8,7 +8,7 @@ from homeassistant.components.remote import PLATFORM_SCHEMA  # noqa: F401
 
 from homeassistant.helpers.event import async_track_time_interval
 
-from .hue_api_response import (
+from .implemented_remotes import (
     HueRemoteZGPSwitch,
     HueRemoteZLLRelativeRotary,
     HueRemoteZLLSwitch,
