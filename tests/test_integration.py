@@ -76,38 +76,33 @@ async def test_integration(mock_hass_2_bridges, caplog):
             r1_data_st["lastupdated"] = "2019-06-22T14:43:55"
             hue_bridge.sensors["ZGPSwitch_1_0"].raw["state"] = r1_data_st
 
-            ## TODO fix tests here
-            assert data_coord_b1.async_request_refresh.call_count == 2
-            assert data_coord_b2.async_request_refresh.call_count == 2
-
             await data_manager.async_update_from_bridges()
+            assert data_coord_b2.async_request_refresh.call_count == 2
+            assert data_coord_b1.async_request_refresh.call_count == 2
             assert remote.state == "2_click"
-            assert len(caplog.messages) == 8
-
-            assert data_coord_b1.async_request_refresh.call_count == 3
-            assert data_coord_b2.async_request_refresh.call_count == 3
+            assert len(caplog.messages) == 5
 
             # Test scheduler: extra calls do nothing
             await data_manager.async_start_scheduler()
             # Test scheduler: forced re-schedule cancels current listener
             data_manager.available = False
             await data_manager.async_start_scheduler()
-            assert len(caplog.messages) == 9
+            assert len(caplog.messages) == 6
 
             # Remove entities from hass
             for i, device in enumerate(data_manager.sensors.copy().values()):
                 await device.async_will_remove_from_hass()
-            assert i == 3
+            assert i == 2
 
-            assert len(caplog.messages) == 14
+            assert len(caplog.messages) == 10
 
             # Test scheduler: extra stops do nothing
             await data_manager.async_stop_scheduler()
 
-            assert data_coord_b1.async_request_refresh.call_count == 3
-            assert data_coord_b2.async_request_refresh.call_count == 3
+            assert data_coord_b1.async_request_refresh.call_count == 2
+            assert data_coord_b2.async_request_refresh.call_count == 2
 
-        assert len(caplog.messages) == 15
+        assert len(caplog.messages) == 11
 
 
 async def test_add_new_device(mock_hass, caplog):
