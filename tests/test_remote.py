@@ -19,7 +19,7 @@ from .conftest import (
     entity_test_added_to_hass,
     patch_async_track_time_interval,
 )
-from .sensor_samples import (
+from .api_samples import (
     MOCK_RWL,
     MOCK_ZGP,
     MOCK_Z3_ROTARY,
@@ -60,7 +60,7 @@ async def test_platform_remote_setup(mock_hass, caplog):
         with patch_async_track_time_interval():
             await async_setup_platform(
                 mock_hass,
-                {"platform": "hueremote", "scan_interval": timedelta(seconds=3),},
+                {"platform": "hueremote", "scan_interval": timedelta(seconds=3)},
                 lambda *x: logging.warning("Added remote entity: %s", x[0]),
             )
 
