@@ -4,19 +4,18 @@ from datetime import timedelta
 
 import pytest
 
-from custom_components.huesensor import DOMAIN
-from custom_components.huesensor.data_manager import HueSensorData
-from custom_components.huesensor.hue_api_response import (
+from custom_components.hueremote import DOMAIN
+from custom_components.hueremote.data_manager import HueSensorData
+from custom_components.hueremote.hue_api_response import (
     parse_hue_api_response,
     parse_rwl,
     parse_zgp,
     parse_z3_rotary,
 )
-from custom_components.huesensor.remote import async_setup_platform, HueRemote
+from custom_components.hueremote.remote import async_setup_platform, HueRemote
 
 from .conftest import (
     DEV_ID_REMOTE_1,
-    DEV_ID_SENSOR_1,
     entity_test_added_to_hass,
     patch_async_track_time_interval,
 )
@@ -61,10 +60,7 @@ async def test_platform_remote_setup(mock_hass, caplog):
         with patch_async_track_time_interval():
             await async_setup_platform(
                 mock_hass,
-                {
-                    "platform": "huesensor",
-                    "scan_interval": timedelta(seconds=3),
-                },
+                {"platform": "hueremote", "scan_interval": timedelta(seconds=3),},
                 lambda *x: logging.warning("Added remote entity: %s", x[0]),
             )
 
@@ -75,7 +71,6 @@ async def test_platform_remote_setup(mock_hass, caplog):
             assert data_manager._scan_interval == timedelta(seconds=3)
             assert len(data_manager.data) == 1
             assert DEV_ID_REMOTE_1 in data_manager.data
-            assert DEV_ID_SENSOR_1 not in data_manager.data
 
             assert len(data_manager.sensors) == 0
             assert len(data_manager.registered_entities) == 1

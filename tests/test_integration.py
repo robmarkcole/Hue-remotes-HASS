@@ -1,23 +1,19 @@
-"""The huesensors tests."""
+"""The hueremotes tests."""
 import logging
 from datetime import timedelta
 
 from homeassistant.components.hue import DOMAIN as HUE_DOMAIN
 
-from custom_components.huesensor import DOMAIN
-from custom_components.huesensor.data_manager import HueSensorData
-from custom_components.huesensor.remote import (
+from custom_components.hueremote import DOMAIN
+from custom_components.hueremote.data_manager import HueSensorData
+from custom_components.hueremote.remote import (
     async_setup_platform as async_setup_remote,
-)
-from custom_components.huesensor.binary_sensor import (
-    async_setup_platform as async_setup_binary_sensor,
 )
 
 from .conftest import (
     add_sensor_data_to_bridge,
     DEV_ID_REMOTE_1,
     DEV_ID_REMOTE_2,
-    DEV_ID_SENSOR_1,
     entity_test_added_to_hass,
     patch_async_track_time_interval,
 )
@@ -65,22 +61,13 @@ async def test_integration(mock_hass_2_bridges, caplog):
             assert len(data_manager.sensors) == 3
 
             assert len(caplog.messages) == 4
-
-            await async_setup_binary_sensor(mock_hass, config_bs, _add_entity_counter)
-            assert sum(entity_counter) == 2
+            assert sum(entity_counter) == 1
             assert len(data_manager.sensors) == 3
 
             # Check bridge updates
-            assert data_coord_b1.async_request_refresh.call_count == 2
-            assert data_coord_b2.async_request_refresh.call_count == 2
-            assert len(caplog.messages) == 6
-            assert DEV_ID_SENSOR_1 in data_manager.registered_entities
-            bin_sensor = data_manager.registered_entities[DEV_ID_SENSOR_1]
-
-            # add to HA
-            await entity_test_added_to_hass(data_manager, bin_sensor)
-            assert len(data_manager.sensors) == 4
-            assert len(caplog.messages) == 7
+            assert data_coord_b1.async_request_refresh.call_count == 1
+            assert data_coord_b2.async_request_refresh.call_count == 1
+            assert len(caplog.messages) == 4
 
             # Change the state on bridge and call update
             hue_bridge = mock_hass.data[HUE_DOMAIN][1].api
@@ -89,6 +76,7 @@ async def test_integration(mock_hass_2_bridges, caplog):
             r1_data_st["lastupdated"] = "2019-06-22T14:43:55"
             hue_bridge.sensors["ZGPSwitch_1_0"].raw["state"] = r1_data_st
 
+            ## TODO fix tests here
             assert data_coord_b1.async_request_refresh.call_count == 2
             assert data_coord_b2.async_request_refresh.call_count == 2
 

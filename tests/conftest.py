@@ -11,22 +11,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify
 import pytest
 
-from custom_components.huesensor.data_manager import (
-    BINARY_SENSOR_MODELS,
+from custom_components.hueremote.data_manager import (
     HueSensorBaseDevice,
     HueSensorData,
 )
 from .sensor_samples import (
-    MOCK_GEOFENCE,
     MOCK_ZGP,
-    MOCK_ZLLPresence,
     MOCK_RWL,
     MOCK_Z3_ROTARY,
 )
 
 DEV_ID_REMOTE_1 = "ZGP_00:44:23:08"
 DEV_ID_REMOTE_2 = "RWL_00:17:88:01:10:3e:3a:dc-02"
-DEV_ID_SENSOR_1 = "SML_00:17:88:01:02:00:af:28-02"
 
 
 async def entity_test_added_to_hass(
@@ -34,10 +30,7 @@ async def entity_test_added_to_hass(
 ):
     """Test routine to mock the internals of async_added_to_hass."""
     entity.hass = data_manager.hass
-    if entity.unique_id.startswith(BINARY_SENSOR_MODELS):
-        entity.entity_id = f"binary_sensor.test_{slugify(entity.name)}"
-    else:
-        entity.entity_id = f"remote.test_{slugify(entity.name)}"
+    entity.entity_id = f"remote.test_{slugify(entity.name)}"
     await entity.async_added_to_hass()
     assert data_manager.available
     assert entity.unique_id in data_manager.sensors
@@ -108,11 +101,7 @@ def _mock_hue_bridges(bridges):
 def mock_hass():
     """Mock HA object for tests, including some sensors in hue integration."""
     hass = MagicMock(spec=HomeAssistant)
-    hass.data = {
-        HUE_DOMAIN: _mock_hue_bridges(
-            [_make_mock_bridge(0, MOCK_ZGP, MOCK_ZLLPresence)]
-        )
-    }
+    hass.data = {HUE_DOMAIN: _mock_hue_bridges([_make_mock_bridge(0, MOCK_ZGP)])}
 
     return hass
 
@@ -124,8 +113,8 @@ def mock_hass_2_bridges():
     hass.data = {
         HUE_DOMAIN: _mock_hue_bridges(
             [
-                _make_mock_bridge(0, MOCK_Z3_ROTARY, MOCK_ZLLPresence),
-                _make_mock_bridge(1, MOCK_ZGP, MOCK_RWL, MOCK_GEOFENCE),
+                _make_mock_bridge(0, MOCK_Z3_ROTARY),
+                _make_mock_bridge(1, MOCK_ZGP, MOCK_RWL),
             ]
         )
     }
@@ -138,6 +127,6 @@ def mock_hass_2_bridges():
 def patch_async_track_time_interval():
     """Mock hass.async_track_time_interval for tests."""
     return patch(
-        "custom_components.huesensor.data_manager.async_track_time_interval",
+        "custom_components.hueremote.data_manager.async_track_time_interval",
         autospec=True,
     )
