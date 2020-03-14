@@ -1,0 +1,8 @@
+{
+  "name": "Hue remotes advanced",
+  "country": "UK",
+  "domains": [
+    "remote"
+  ],
+  "homeassistant": "0.106.0"
+}
