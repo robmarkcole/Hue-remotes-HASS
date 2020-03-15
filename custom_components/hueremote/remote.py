@@ -47,7 +47,7 @@ async def async_setup_platform(
             for item_id in api:
                 sensor = api[item_id]
                 if sensor.type not in _IMPLEMENTED_REMOTE_TYPES:
-                    continue
+                    continue  # pragma: no cover
 
                 existing = bridge.sensor_manager.current.get(sensor.uniqueid)
                 if existing is not None:

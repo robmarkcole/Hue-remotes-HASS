@@ -9,7 +9,7 @@ from homeassistant.components.hue import DOMAIN as HUE_DOMAIN
 from custom_components.hueremote import DOMAIN
 from custom_components.hueremote.remote import async_setup_platform
 
-from .api_samples import MOCK_ZLLPresence
+from .api_samples import MOCK_ROM
 from .conftest import DEV_ID_REMOTE_1, add_sensor_data_to_bridge
 
 
@@ -62,7 +62,6 @@ async def test_platform_remote_setup(mock_hass, caplog):
 
             await data_coord_b1.async_refresh()
             await data_coord_b2.async_refresh()
-            # await asyncio.sleep(1)
             assert data_coord_b1.update_method.call_count == 1
             assert data_coord_b2.update_method.call_count == 1
             assert remote.state == "2_click"
@@ -70,10 +69,10 @@ async def test_platform_remote_setup(mock_hass, caplog):
             assert len(caplog.messages) == 7
 
             # add a new item to bridge
-            add_sensor_data_to_bridge(hue_bridge, MOCK_ZLLPresence)
+            add_sensor_data_to_bridge(hue_bridge, MOCK_ROM)
             await data_coord_b2.async_refresh()
             assert data_coord_b2.update_method.call_count == 2
-            assert sum(entity_counter) == 2
+            assert sum(entity_counter) == 3
             assert len(sm_b1.current) == 1
-            assert len(sm_b2.current) == 4
-            assert len(caplog.messages) == 8
+            assert len(sm_b2.current) == 5
+            assert len(caplog.messages) == 9

@@ -16,13 +16,11 @@ from homeassistant.components.hue.sensor_base import SensorManager
 import pytest
 
 from .api_samples import (
-    MOCK_GEOFENCE,
-    MOCK_ZGP,
-    MOCK_ZLLPresence,
-    MOCK_RWL,
     MOCK_FOH,
-    MOCK_Z3_SWITCH,
+    MOCK_RWL,
+    MOCK_ZGP,
     MOCK_Z3_ROTARY,
+    MOCK_Z3_SWITCH,
 )
 
 DEV_ID_REMOTE_1 = "00:00:00:00:00:44:23:08-f2"
@@ -95,10 +93,8 @@ def mock_hass():
     hass = MagicMock(spec=HomeAssistant)
     hass.data = {
         HUE_DOMAIN: {
-            0: _mock_hue_bridge(MOCK_Z3_ROTARY, MOCK_ZLLPresence),
-            1: _mock_hue_bridge(
-                MOCK_ZGP, MOCK_RWL, MOCK_GEOFENCE, MOCK_FOH, MOCK_Z3_SWITCH
-            ),
+            0: _mock_hue_bridge(MOCK_Z3_ROTARY),
+            1: _mock_hue_bridge(MOCK_ZGP, MOCK_RWL, MOCK_FOH, MOCK_Z3_SWITCH),
         }
     }
     hass.config = MagicMock()
