@@ -37,3 +37,20 @@ remote:
 * [Hue smart button](https://www2.meethue.com/en-us/p/hue-smart-button/046677553715)
 * [Lutron Aurora smart bulb dimmer](http://www.lutron.com/en-US/products/pages/standalonecontrols/dimmers-switches/smartbulbdimmer/overview.aspx)
 * [Lutron Aurora rotary dimmer](http://www.lutron.com/en-US/Products/Pages/StandAloneControls/Dimmers-Switches/RotaryDimmer/Overview.aspx)
+
+## Developers
+* Create venv -> `$ python3 -m venv venv`
+* Use venv -> `$ source venv/bin/activate`
+* Install requirements -> `$ pip install -r requirements.txt` & `$ pip install -r requirements-dev.txt`
+* Run tests -> `$ venv/bin/py.test --cov=custom_components tests/ -vv -p no:warnings`
+* Black format -> `$ venv/bin/black custom_components/*` (or setup VScode for format on save)
+
+## Contributors
+Please format code usign [Black](https://github.com/psf/black) before opening a pull request.
+
+A big thanks to [Atsuko Ito](https://github.com/yottatsa) and [Eugenio Panadero](https://github.com/azogue) for their many contributions to this work!
+
+## ✨ Support this work
+https://github.com/sponsors/robmarkcole
+
+If you or your business find this work useful please consider becoming a sponsor at the link above, this really helps justify the time I invest in maintaining this repo. As we say in England, 'every little helps' - thanks in advance!
