@@ -5,7 +5,7 @@
 
 [FOR COMMUNITY SUPPORT PLEASE USE THIS THREAD](https://community.home-assistant.io/t/hue-motion-sensors-remotes-custom-component)
 
-For Hue remotes checkout [Hue-remotes-HASS](https://github.com/robmarkcole/Hue-remotes-HASS)
+For Hue motion sensors checkout [Hue-sensors-HASS](https://github.com/robmarkcole/Hue-sensors-HASS)
 
 # Hue-remotes-HASS
 Custom integration for Hue &amp; Lutron Aurora [Friends of Hue](https://www2.meethue.com/en-us/works-with) (FOH) remotes with Home Assistant.
