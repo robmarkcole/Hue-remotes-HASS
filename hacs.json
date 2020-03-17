@@ -4,5 +4,6 @@
   "domains": [
     "remote"
   ],
+  "render_readme": true,
   "homeassistant": "0.106.0"
 }
