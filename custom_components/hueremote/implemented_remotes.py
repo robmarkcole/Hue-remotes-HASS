@@ -88,11 +88,6 @@ class HueGenericRemote(GenericHueSensor, RemoteDevice):
         """Icon to use in the frontend, if any."""
         return REMOTE_ICONS.get(self.sensor.modelid[0:3])
 
-    @property
-    def force_update(self):
-        """Force update."""
-        return True
-
     def turn_on(self, **kwargs):
         """Do nothing."""
 
