@@ -1,8 +1,10 @@
 {
   "name": "Hue remotes advanced",
-  "country": "UK",
+  "content_in_root": false,
   "domains": [
     "remote"
   ],
-  "homeassistant": "0.107.0"
+  "homeassistant": "0.108.0",
+  "iot_class": "Local Polling",
+  "render_readme": true
 }
