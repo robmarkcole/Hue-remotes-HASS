@@ -6,7 +6,9 @@ from aiohue import Bridge
 from aiohue.sensors import (
     GenericSensor,
     TYPE_ZGP_SWITCH,
+    TYPE_ZLL_ROTARY,
     TYPE_ZLL_SWITCH,
+    ZLLRotarySensor,
     ZLLSwitchSensor,
     ZGPSwitchSensor,
 )
@@ -56,6 +58,8 @@ def add_sensor_data_to_bridge(bridge, raw_data):
     sensor_type = raw_data["type"]
     if sensor_type == TYPE_ZGP_SWITCH:
         aio_sensor_cls = ZGPSwitchSensor
+    elif sensor_type == TYPE_ZLL_ROTARY:
+        aio_sensor_cls = ZLLRotarySensor
     elif sensor_type in (TYPE_ZLL_SWITCH, TYPE_ZLL_SWITCH):
         aio_sensor_cls = ZLLSwitchSensor
     else:

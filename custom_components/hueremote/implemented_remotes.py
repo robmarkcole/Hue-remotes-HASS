@@ -161,26 +161,14 @@ class HueRemoteZLLRelativeRotary(HueGenericRemote):
     @property
     def state(self):
         """Return the last button press of the remote."""
-        return Z3_DIAL.get(self.sensor.state["rotaryevent"])
+        return Z3_DIAL.get(self.sensor.rotaryevent)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        # TODO implement ZLLRotarySensor in aiohue
-        # attributes = super().device_state_attributes
-        # attributes["dial_state"] = self.state or "No data"
-        # attributes["dial_position"] = self.sensor.state["expectedrotation"]
-        # attributes["software_update"] = self.sensor.raw["swupdate"]["state"]
+        attributes = super().device_state_attributes
+        attributes["dial_state"] = self.state or "No data"
+        attributes["dial_position"] = self.sensor.expectedrotation
+        attributes["software_update"] = self.sensor.raw["swupdate"]["state"]
 
-        return {
-            "model": self.sensor.type,
-            "dial_state": self.state or "No data",
-            "dial_position": self.sensor.state["expectedrotation"],
-            "last_button_event": self.state or "No data",
-            "last_updated": self.sensor.state["lastupdated"].split("T"),
-            "name": self.sensor.name,
-            "on": self.sensor.raw["config"]["on"],
-            "reachable": self.sensor.raw["config"]["reachable"],
-            "battery_level": self.sensor.raw["config"].get("battery"),
-            "software_update": self.sensor.raw["swupdate"]["state"],
-        }
+        return attributes

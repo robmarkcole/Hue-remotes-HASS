@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH
+from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_ROTARY, TYPE_ZLL_SWITCH
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.components.remote import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.helpers.event import async_track_time_interval
@@ -17,9 +17,6 @@ from homeassistant.components.hue.sensor_base import SENSOR_CONFIG_MAP
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
-
-# TODO add ZLLRelativeRotary definitions to aiohue
-TYPE_ZLL_ROTARY = "ZLLRelativeRotary"
 
 # Filter by aiohue.sensor data using "type" attribute
 _IMPLEMENTED_REMOTE_TYPES = (TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH, TYPE_ZLL_ROTARY)
