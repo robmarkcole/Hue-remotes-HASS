@@ -1,4 +1,4 @@
-"""Hue API data parsing for sensors."""
+"""Hue sensor states parsed as remotes with custom states."""
 from aiohue.sensors import (
     ZGP_SWITCH_BUTTON_1,
     ZGP_SWITCH_BUTTON_2,
