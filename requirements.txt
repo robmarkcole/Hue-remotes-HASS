@@ -1,2 +1,2 @@
-homeassistant>=0.106.4
-aiohue==2.0.0
+homeassistant>=0.108.0
+aiohue>=2.1.0
