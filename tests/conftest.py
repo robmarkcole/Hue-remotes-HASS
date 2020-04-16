@@ -3,37 +3,29 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 from aiohue import Bridge
-from aiohue.sensors import GenericSensor
+from aiohue.sensors import (
+    GenericSensor,
+    TYPE_ZGP_SWITCH,
+    TYPE_ZLL_ROTARY,
+    TYPE_ZLL_SWITCH,
+    ZLLRotarySensor,
+    ZLLSwitchSensor,
+    ZGPSwitchSensor,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.components.hue import DOMAIN as HUE_DOMAIN, HueBridge
 from homeassistant.components.hue.sensor_base import SensorManager
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import slugify
 import pytest
 
-from custom_components.hueremote.data_manager import (
-    HueSensorBaseDevice,
-    HueSensorData,
-)
 from .api_samples import (
-    MOCK_ZGP,
+    MOCK_FOH,
     MOCK_RWL,
+    MOCK_ZGP,
     MOCK_Z3_ROTARY,
+    MOCK_Z3_SWITCH,
 )
 
-DEV_ID_REMOTE_1 = "ZGP_00:44:23:08"
-DEV_ID_REMOTE_2 = "RWL_00:17:88:01:10:3e:3a:dc-02"
-
-
-async def entity_test_added_to_hass(
-    data_manager: HueSensorData, entity: HueSensorBaseDevice,
-):
-    """Test routine to mock the internals of async_added_to_hass."""
-    entity.hass = data_manager.hass
-    entity.entity_id = f"remote.test_{slugify(entity.name)}"
-    await entity.async_added_to_hass()
-    assert data_manager.available
-    assert entity.unique_id in data_manager.sensors
+DEV_ID_REMOTE_1 = "00:00:00:00:00:44:23:08-f2"
 
 
 class MockAsyncCounter:
@@ -61,72 +53,55 @@ class MockAsyncCounter:
         return self._counter
 
 
-def add_sensor_data_to_bridge(bridge, sensor_key, raw_data):
+def add_sensor_data_to_bridge(bridge, raw_data):
     """Append a sensor raw data packed to the mocked bridge."""
-    bridge.sensors[sensor_key] = GenericSensor(
-        raw_data["uniqueid"], deepcopy(raw_data), None
-    )
+    sensor_type = raw_data["type"]
+    if sensor_type == TYPE_ZGP_SWITCH:
+        aio_sensor_cls = ZGPSwitchSensor
+    elif sensor_type == TYPE_ZLL_ROTARY:
+        aio_sensor_cls = ZLLRotarySensor
+    elif sensor_type in (TYPE_ZLL_SWITCH, TYPE_ZLL_SWITCH):
+        aio_sensor_cls = ZLLSwitchSensor
+    else:
+        aio_sensor_cls = GenericSensor
+    sensor_key = raw_data["uniqueid"]
+    aio_sensor = aio_sensor_cls(sensor_key, deepcopy(raw_data), None)
+    bridge.sensors[sensor_key] = aio_sensor
 
 
-def _make_mock_bridge(idx_bridge, *sensors):
+def _mock_hue_bridge(*sensors):
+    # mocking HueBridge at homeassistant.components.hue level
     bridge = MagicMock(spec=Bridge)
     bridge.sensors = {}
     for i, raw_data in enumerate(sensors):
-        add_sensor_data_to_bridge(
-            bridge, f"{raw_data['type']}_{idx_bridge}_{i}", raw_data
-        )
-    return bridge
+        add_sensor_data_to_bridge(bridge, raw_data)
 
+    hue_bridge = MagicMock(spec=HueBridge)
+    hue_bridge.hass = MagicMock(spec=HomeAssistant)
+    hue_bridge.hass.bus = MagicMock()
+    hue_bridge.api = bridge
+    hue_bridge.reset_jobs = MagicMock()
 
-def _mock_hue_bridges(bridges):
-    # mocking HueBridge at homeassistant.components.hue level
-    hue_bridges = {}
-    for i, bridge in enumerate(bridges):
-        coordinator = MagicMock(spec=DataUpdateCoordinator)
-        coordinator.async_request_refresh = MockAsyncCounter()
+    with patch("homeassistant.components.hue.sensor_base.debounce"):
+        sensor_manager = SensorManager(hue_bridge)
+        sensor_manager.coordinator.update_method = MockAsyncCounter()
 
-        sensor_manager = MagicMock(spec=SensorManager)
-        sensor_manager.coordinator = coordinator
+    hue_bridge.sensor_manager = sensor_manager
 
-        hue_bridge = MagicMock(spec=HueBridge)
-        hue_bridge.api = bridge
-        hue_bridge.sensor_manager = sensor_manager
-
-        hue_bridges[i] = hue_bridge
-
-    return hue_bridges
+    return hue_bridge
 
 
 @pytest.fixture
 def mock_hass():
     """Mock HA object for tests, including some sensors in hue integration."""
     hass = MagicMock(spec=HomeAssistant)
-    hass.data = {HUE_DOMAIN: _mock_hue_bridges([_make_mock_bridge(0, MOCK_ZGP)])}
-
-    return hass
-
-
-@pytest.fixture
-def mock_hass_2_bridges():
-    """Mock HA object for tests, with some sensors in 2 bridges."""
-    hass = MagicMock(spec=HomeAssistant)
     hass.data = {
-        HUE_DOMAIN: _mock_hue_bridges(
-            [
-                _make_mock_bridge(0, MOCK_Z3_ROTARY),
-                _make_mock_bridge(1, MOCK_ZGP, MOCK_RWL),
-            ]
-        )
+        HUE_DOMAIN: {
+            0: _mock_hue_bridge(MOCK_Z3_ROTARY),
+            1: _mock_hue_bridge(MOCK_ZGP, MOCK_RWL, MOCK_FOH, MOCK_Z3_SWITCH),
+        }
     }
     hass.config = MagicMock()
     hass.states = MagicMock()
 
     return hass
-
-
-def patch_async_track_time_interval():
-    """Mock hass.async_track_time_interval for tests."""
-    return patch(
-        "custom_components.hueremote.data_manager.async_track_time_interval",
-        autospec=True,
-    )

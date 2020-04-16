@@ -2,96 +2,72 @@
 import logging
 from datetime import timedelta
 
-import pytest
+from homeassistant.components.hue import DOMAIN as HUE_DOMAIN
 
 from custom_components.hueremote import DOMAIN
-from custom_components.hueremote.data_manager import HueSensorData
-from custom_components.hueremote.hue_api_response import (
-    parse_hue_api_response,
-    parse_rwl,
-    parse_zgp,
-    parse_z3_rotary,
-)
-from custom_components.hueremote.remote import async_setup_platform, HueRemote
+from custom_components.hueremote.remote import async_setup_platform
 
-from .conftest import (
-    DEV_ID_REMOTE_1,
-    entity_test_added_to_hass,
-    patch_async_track_time_interval,
-)
-from .api_samples import (
-    MOCK_RWL,
-    MOCK_ZGP,
-    MOCK_Z3_ROTARY,
-    PARSED_RWL,
-    PARSED_ZGP,
-    PARSED_Z3_ROTARY,
-)
-
-
-@pytest.mark.parametrize(
-    "raw_response, sensor_key, parsed_response, parser_func",
-    (
-        (MOCK_ZGP, "ZGP_00:44:23:08", PARSED_ZGP, parse_zgp),
-        (MOCK_RWL, "RWL_00:17:88:01:10:3e:3a:dc-02", PARSED_RWL, parse_rwl),
-        (
-            MOCK_Z3_ROTARY,
-            "Z3-_ff:ff:00:0f:e7:fd:ba:b7-01-fc00",
-            PARSED_Z3_ROTARY,
-            parse_z3_rotary,
-        ),
-    ),
-)
-def test_parse_remote_raw_data(
-    raw_response, sensor_key, parsed_response, parser_func, caplog
-):
-    """Test data parsers for known remotes and check behavior for unknown."""
-    assert parser_func(raw_response) == parsed_response
-    unknown_sensor_data = {"modelid": "new_one", "uniqueid": "ff:00:11:22"}
-    assert parse_hue_api_response(
-        [raw_response, unknown_sensor_data, raw_response]
-    ) == {sensor_key: parsed_response}
-    assert len(caplog.messages) == 0
+from .api_samples import MOCK_ROM
+from .conftest import DEV_ID_REMOTE_1, add_sensor_data_to_bridge
 
 
 async def test_platform_remote_setup(mock_hass, caplog):
     """Test platform setup for remotes."""
+    entity_counter = []
+    config_remote = {"platform": DOMAIN, "scan_interval": timedelta(seconds=3)}
+
+    sm_b1 = mock_hass.data[HUE_DOMAIN][0].sensor_manager
+    sm_b2 = mock_hass.data[HUE_DOMAIN][1].sensor_manager
+    data_coord_b1 = sm_b1.coordinator
+    data_coord_b2 = sm_b2.coordinator
+    assert DOMAIN not in mock_hass.data
+
+    def _add_entity_counter(*_args):
+        entity_counter.append(1)
+
     with caplog.at_level(logging.DEBUG):
-        with patch_async_track_time_interval():
-            await async_setup_platform(
-                mock_hass,
-                {"platform": "hueremote", "scan_interval": timedelta(seconds=3)},
-                lambda *x: logging.warning("Added remote entity: %s", x[0]),
-            )
+        # setup remotes
+        await async_setup_platform(mock_hass, config_remote, _add_entity_counter)
+        assert sum(entity_counter) == 2
 
-            assert DOMAIN in mock_hass.data
-            data_manager = mock_hass.data[DOMAIN]
-            assert isinstance(data_manager, HueSensorData)
-            assert len(data_manager.registered_entities) == 1
-            assert data_manager._scan_interval == timedelta(seconds=3)
-            assert len(data_manager.data) == 1
-            assert DEV_ID_REMOTE_1 in data_manager.data
+        remote_container = mock_hass.data[DOMAIN]
+        assert len(remote_container) == 5
 
-            assert len(data_manager.sensors) == 0
-            assert len(data_manager.registered_entities) == 1
-            remote = data_manager.registered_entities[DEV_ID_REMOTE_1]
-            assert not remote.hass
+        # Check bridge updates
+        assert data_coord_b1.update_method.call_count == 0
+        assert data_coord_b2.update_method.call_count == 0
 
-            await entity_test_added_to_hass(data_manager, remote)
-            # await remote.async_added_to_hass()
-            assert len(data_manager.sensors) == 1
-            assert DEV_ID_REMOTE_1 in data_manager.sensors
+        assert DEV_ID_REMOTE_1 in remote_container
+        remote = remote_container[DEV_ID_REMOTE_1]
+        assert remote.state == "3_click"
+        assert len(caplog.messages) == 7
+        assert remote.icon == "mdi:remote"
+        for rem_i in remote_container.values():
+            assert rem_i.state
+            assert not rem_i.force_update
+            assert rem_i.icon
+            assert rem_i.device_state_attributes
 
-            assert isinstance(remote, HueRemote)
-            assert remote.hass
-            assert remote.force_update
-            assert remote.state == "3_click"
-            assert remote.icon == "mdi:remote"
-            assert not remote.should_poll
-            assert "last_updated" in remote.device_state_attributes
-            assert remote.unique_id == DEV_ID_REMOTE_1
+        # Change the state on bridge and call update
+        hue_bridge = mock_hass.data[HUE_DOMAIN][1].api
+        r1_data_st = hue_bridge.sensors[DEV_ID_REMOTE_1].raw["state"]
+        r1_data_st["buttonevent"] = 16
+        r1_data_st["lastupdated"] = "2019-06-22T14:43:55"
+        hue_bridge.sensors[DEV_ID_REMOTE_1].raw["state"] = r1_data_st
+        assert len(caplog.messages) == 7
 
-            await remote.async_will_remove_from_hass()
-            assert len(data_manager.sensors) == 0
-            assert len(data_manager.registered_entities) == 0
-            assert not data_manager.available
+        await data_coord_b1.async_refresh()
+        await data_coord_b2.async_refresh()
+        assert data_coord_b1.update_method.call_count == 1
+        assert data_coord_b2.update_method.call_count == 1
+        assert remote.state == "2_click"
+
+        assert len(caplog.messages) == 9
+
+        # add a new item to bridge
+        add_sensor_data_to_bridge(hue_bridge, MOCK_ROM)
+        await data_coord_b2.async_refresh()
+        assert data_coord_b2.update_method.call_count == 2
+        assert sum(entity_counter) == 3
+        assert len(remote_container) == 6
+        assert len(caplog.messages) == 11
