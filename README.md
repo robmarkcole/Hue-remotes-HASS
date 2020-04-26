@@ -20,7 +20,7 @@ As this new platform imposes a lower `scan_interval` for all hue sensors (of 1Hz
 
 **Be advised that the increased update of this custom integration may cause connectivity problems which can result in errors in the official hue integration**, please do not create any issue for this. If you can't live with these errors, do not use this custom integration.
 
-### Suggested migration
+## Suggested migration
 
 Since HA v0.108 **Hue switches are recognized in the `hue` integration**, 
 making this CC not really necessary anymore, but there are some caveats, 
@@ -70,7 +70,11 @@ In that case, feel free of playing with different values to optimize your specif
 
 ## Installation
 
-Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). You need to set up your [Hue bridge](https://www.home-assistant.io/integrations/hue) first. TODO Alternatively install via [HACS](https://hacs.xyz/).
+**Install via [HACS](https://hacs.xyz/)**. You need to set up your [Hue bridge](https://www.home-assistant.io/integrations/hue) first.
+
+#### Manual installation
+
+Alternatively, place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder).
 
 ## Configuration
 
