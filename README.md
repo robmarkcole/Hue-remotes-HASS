@@ -1,7 +1,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![build status](http://img.shields.io/travis/robmarkcole/Hue-remotes-HASS/master.svg?style=flat)](https://travis-ci.org/robmarkcole/Hue-remotes-HASS)
 [![Coverage](https://codecov.io/github/robmarkcole/Hue-remotes-HASS/coverage.svg?branch=master)](https://codecov.io/gh/robmarkcole/Hue-remotes-HASS)
-[![Sponsor](https://img.shields.io/badge/sponsor-%F0%9F%92%96-green)](https://github.com/sponsors/robmarkcole)
 
 [FOR COMMUNITY SUPPORT PLEASE USE THIS THREAD](https://community.home-assistant.io/t/hue-motion-sensors-remotes-custom-component)
 
@@ -105,8 +104,3 @@ The scan interval can be modified optionally, by adding `scan_interval: 2`.
 Please format code usign [Black](https://github.com/psf/black) before opening a pull request.
 
 A big thanks to [Atsuko Ito](https://github.com/yottatsa) and [Eugenio Panadero](https://github.com/azogue) for their many contributions to this work!
-
-## ✨ Support this work
-https://github.com/sponsors/robmarkcole
-
-If you or your business find this work useful please consider becoming a sponsor at the link above, this really helps justify the time I invest in maintaining this repo. As we say in England, 'every little helps' - thanks in advance!
